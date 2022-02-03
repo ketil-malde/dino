@@ -13,7 +13,12 @@ USERID=os.getuid()
 GROUPID=os.getgid()
 CWD=os.getcwd()
 USERNAME=pwd.getpwuid(USERID).pw_name
-RUNTIME='' # '--gpus device=0'
+RUNTIME='--gpus device=0' # ''
+
+config = {
+    'data_dir': 'random_frames',
+    'output_dir': 'runs'
+    }
 
 def docker_run(args=''):
     os.system(f'docker run {RUNTIME} --ipc=host --rm --user {USERID}:{GROUPID} -v {CWD}:/project -it {USERNAME}-{IMAGENAME} {args}')
@@ -36,7 +41,7 @@ class Model:
         
     def train(self):
         '''Train the network'''
-        docker_run(f"python3 /usr/src/app/main_dino.py todo:add correct args")
+        docker_run(f"python3 /usr/src/app/main_dino.py --arch vit_small --data_path {self.myconf['data_dir']} --output_dir {self.myconf['output_dir']}")
 
     def check(self):
         '''Verify that data is in place and that the output doesn't exist'''

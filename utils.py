@@ -495,6 +495,8 @@ def init_distributed_mode(args):
     torch.cuda.set_device(args.gpu)
     print('| distributed init (rank {}): {}'.format(
         args.rank, args.dist_url), flush=True)
+
+    # os.environ["NCCL_DEBUG"] = "INFO"
     dist.barrier()
     setup_for_distributed(args.rank == 0)
 
