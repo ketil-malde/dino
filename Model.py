@@ -16,8 +16,11 @@ USERNAME=pwd.getpwuid(USERID).pw_name
 RUNTIME='--gpus device=0' # ''
 
 config = {
-    'data_dir': 'random_frames',
-    'output_dir': 'runs'
+    'data_dir': 'data',
+    'output_dir': 'runs',
+    'arch': 'vit_small',
+    'batch_size': 32,  # 40 probably fits in 12GB.
+    'num_workers': 8
     }
 
 def docker_run(args=''):
@@ -41,7 +44,9 @@ class Model:
         
     def train(self):
         '''Train the network'''
-        docker_run(f"python3 /usr/src/app/main_dino.py --arch vit_small --data_path {self.myconf['data_dir']} --output_dir {self.myconf['output_dir']}")
+        cmd = f"python3 /usr/src/app/main_dino.py --arch {self.myconf['arch']} --num_workers {self.myconf['num_workers']} --batch_size_per_gpu {self.myconf['batch_size']} --data_path {self.myconf['data_dir']} --output_dir {self.myconf['output_dir']}"
+        print('***',cmd)
+        docker_run(cmd)
 
     def check(self):
         '''Verify that data is in place and that the output doesn't exist'''
@@ -49,7 +54,9 @@ class Model:
 
     def predict(self, wgths, target, output):
         '''Run a trained network on the data in target'''
-        docker_run(f"python3 /usr/src/app/main_dino.py todo:add args")
+        cmd = f"python3 /usr/src/app/video_generation.py --arch {self.myconf['arch']} --patch_size 16 --pretrained_weights {wgths} --input_path {target} --output_path {output}"
+        print('***',cmd)
+        docker_run(cmd)
 
     def test(self):
         '''Run tests'''
