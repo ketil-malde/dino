@@ -6,6 +6,7 @@
 
 import os
 import pwd
+import datetime
 
 IMAGENAME='dino'
 
@@ -20,7 +21,8 @@ config = {
     'output_dir': 'runs',
     'arch': 'vit_small',
     'batch_size': 32,  # 40 probably fits in 12GB.
-    'num_workers': 8
+    'num_workers': 8,
+    'epochs' : 100
     }
 
 def docker_run(args=''):
@@ -44,7 +46,8 @@ class Model:
         
     def train(self):
         '''Train the network'''
-        cmd = f"python3 /usr/src/app/main_dino.py --arch {self.myconf['arch']} --num_workers {self.myconf['num_workers']} --batch_size_per_gpu {self.myconf['batch_size']} --data_path {self.myconf['data_dir']} --output_dir {self.myconf['output_dir']}"
+        now = datetime.datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+        cmd = f"python3 /usr/src/app/main_dino.py --arch {self.myconf['arch']} --epochs {self.myconf['epochs']} --num_workers {self.myconf['num_workers']} --batch_size_per_gpu {self.myconf['batch_size']} --data_path {self.myconf['data_dir']} --output_dir {self.myconf['output_dir']}/{now}"
         print('***',cmd)
         docker_run(cmd)
 
