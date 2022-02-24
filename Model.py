@@ -5,6 +5,7 @@
 # labels must be placed in ./labels/foobar.txt, format <classno> <x1> <y1> <x2> <y2> - in fraction of image
 
 import os
+import shutil
 import pwd
 import datetime
 
@@ -22,7 +23,8 @@ config = {
     'arch': 'vit_small',
     'batch_size': 32,  # 40 probably fits in 12GB.
     'num_workers': 8,
-    'epochs' : 100
+    'epochs' : 100,
+    'weights' : None
     }
 
 def docker_run(args=''):
@@ -47,7 +49,13 @@ class Model:
     def train(self):
         '''Train the network'''
         now = datetime.datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-        cmd = f"python3 /usr/src/app/main_dino.py --arch {self.myconf['arch']} --epochs {self.myconf['epochs']} --num_workers {self.myconf['num_workers']} --batch_size_per_gpu {self.myconf['batch_size']} --data_path {self.myconf['data_dir']} --output_dir {self.myconf['output_dir']}/{now}"
+        outd = f"{self.myconf['output_dir']}/{now}"
+        if os.path.isfile(self.myconf['weights']):
+            print("*** Copying checkpoint {self.myconf.weights}")
+            os.mkdir(outd)
+            shutil.copy(self.myconf['weights'], outd)
+
+        cmd = f"python3 /usr/src/app/main_dino.py --arch {self.myconf['arch']} --epochs {self.myconf['epochs']} --num_workers {self.myconf['num_workers']} --batch_size_per_gpu {self.myconf['batch_size']} --data_path {self.myconf['data_dir']} --output_dir {outd}"
         print('***',cmd)
         docker_run(cmd)
 
