@@ -50,7 +50,7 @@ class Model:
         '''Train the network'''
         now = datetime.datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
         outd = f"{self.myconf['output_dir']}/{now}"
-        if os.path.isfile(self.myconf['weights']):
+        if self.myconf['weights'] is not None and os.path.isfile(self.myconf['weights']):
             print("*** Copying checkpoint {self.myconf.weights}")
             os.mkdir(outd)
             shutil.copy(self.myconf['weights'], outd)
