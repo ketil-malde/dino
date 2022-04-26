@@ -80,8 +80,8 @@ def load_pretrained_weights(model, pretrained_weights, checkpoint_key, model_nam
         state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
         msg = model.load_state_dict(state_dict, strict=False)
         print('Pretrained weights found at {} and loaded with msg: {}'.format(pretrained_weights, msg))
-    else:
-        print("Please use the `--pretrained_weights` argument to indicate the path of the checkpoint to evaluate.")
+    elif pretrained_weights == '':
+        print('No weights specified - loading default pretrained weights')
         url = None
         if model_name == "vit_small" and patch_size == 16:
             url = "dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth"
@@ -107,7 +107,9 @@ def load_pretrained_weights(model, pretrained_weights, checkpoint_key, model_nam
             model.load_state_dict(state_dict, strict=True)
         else:
             print("There is no reference weights available for this model => We use random weights.")
-
+    else:
+        print("Error: `--pretrained_weights` was specified, but does not exist.")
+        exit(1)
 
 def load_pretrained_linear_weights(linear_classifier, model_name, patch_size):
     url = None
