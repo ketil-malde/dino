@@ -104,7 +104,7 @@ def eval_linear(args):
         linear_classifier.parameters(),
         args.lr * (args.batch_size_per_gpu * utils.get_world_size()) / 256., # linear scaling rule
         momentum=0.9,
-        weight_decay=0, # we do not apply weight decay
+        weight_decay=args.weight_decay, # we do not apply weight decay
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0)
 
@@ -268,6 +268,7 @@ if __name__ == '__main__':
         with the batch size, and specified here for a reference batch size of 256.
         We recommend tweaking the LR depending on the checkpoint evaluated.""")
     parser.add_argument('--batch_size_per_gpu', default=128, type=int, help='Per-GPU batch-size')
+    parser.add_argument('--weight_decay', default=0, type=float, help='Weight decay regularization to use')
     parser.add_argument("--dist_url", default="env://", type=str, help="""url used to set up
         distributed training; see https://pytorch.org/docs/stable/distributed.html""")
     parser.add_argument("--local_rank", default=0, type=int, help="Please ignore and do not set this argument.")
