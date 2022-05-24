@@ -134,6 +134,9 @@ def train_dino(args):
     utils.fix_random_seeds(args.seed)
     print("git:\n  {}\n".format(utils.get_sha()))
     print("\n".join("%s: %s" % (k, str(v)) for k, v in sorted(dict(vars(args)).items())))
+    with open(Path(args.output_dir) / "dino_config.txt", "w") as f:
+       f.write("\n".join("%s: %s" % (k, str(v)) for k, v in sorted(dict(vars(args)).items())))
+
     cudnn.benchmark = True
 
     # ============ preparing data ... ============
