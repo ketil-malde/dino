@@ -129,13 +129,16 @@ def get_args_parser():
     return parser
 
 
+import platform
+
 def train_dino(args):
     utils.init_distributed_mode(args)
     utils.fix_random_seeds(args.seed)
     print("git:\n  {}\n".format(utils.get_sha()))
     print("\n".join("%s: %s" % (k, str(v)) for k, v in sorted(dict(vars(args)).items())))
-    with open(Path(args.output_dir) / "dino_config.txt", "w") as f:
-       f.write("\n".join("%s: %s" % (k, str(v)) for k, v in sorted(dict(vars(args)).items())))
+    with open(Path(args.output_dir) / 'dino_config.txt', 'w') as f:
+       f.write(''.join('%s: %s\n' % (k, str(v)) for k, v in sorted(dict(vars(args)).items())))
+       f.write('\nSystem information:\t' + '\t'.join(s for s in platform.uname())+'\n')
 
     cudnn.benchmark = True
 
