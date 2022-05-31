@@ -57,7 +57,21 @@ def eval_linear(args):
     utils.load_pretrained_weights(model, args.pretrained_weights, args.checkpoint_key, args.arch, args.patch_size)
     print(f"Model {args.arch} built.")
 
-    linear_classifier = LinearClassifier(embed_dim, num_labels=args.num_labels)
+    # Decide the number of labels
+    num_val_dirs = len(os.listdir(os.path.join(args.data_path, "val")))
+    num_train_dirs = len(os.listdir(os.path.join(args.data_path, "train")))
+
+    if not num_val_dirs == num_train_dirs:
+        print(f'*** Error: number of training dirs: {num_train_dirs} differs from val dirs: {num_val_dirs}')
+        exit(1)
+    if args.num_labels is not None and not args.num_labels < num_val_dirs:
+        print(f'*** Warning: specified number of classes {args.num_labels} is less than number of dirs {num_train_dirs}')
+    if args.num_labels is not None:
+        my_num_labels = args.num_labels
+    else:
+        my_num_labels = num_val_dirs
+
+    linear_classifier = LinearClassifier(embed_dim, num_labels=my_num_labels)
     linear_classifier = linear_classifier.cuda()
     linear_classifier = nn.parallel.DistributedDataParallel(linear_classifier, device_ids=[args.gpu])
 
@@ -182,7 +196,7 @@ def train(model, linear_classifier, optimizer, loader, epoch, n, avgpool):
         # step
         optimizer.step()
 
-        # log 
+        # log
         torch.cuda.synchronize()
         metric_logger.update(loss=loss.item())
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
@@ -236,7 +250,7 @@ def validate_network(val_loader, model, linear_classifier, n, avgpool):
 
 class LinearClassifier(nn.Module):
     """Linear layer to train on top of frozen features"""
-    def __init__(self, dim, num_labels=1000):
+    def __init__(self, dim, num_labels):
         super(LinearClassifier, self).__init__()
         self.num_labels = num_labels
         self.linear = nn.Linear(dim, num_labels)
@@ -276,7 +290,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=10, type=int, help='Number of data loading workers per GPU.')
     parser.add_argument('--val_freq', default=1, type=int, help="Epoch frequency for validation.")
     parser.add_argument('--output_dir', default=".", help='Path to save logs and checkpoints')
-    parser.add_argument('--num_labels', default=1000, type=int, help='Number of labels for linear classifier')
+    parser.add_argument('--num_labels', default=None, type=int, help='Number of labels for linear classifier')
     parser.add_argument('--evaluate', dest='evaluate', action='store_true', help='evaluate model on validation set')
     args = parser.parse_args()
     eval_linear(args)
