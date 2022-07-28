@@ -71,7 +71,7 @@ def eval_linear(args):
     else:
         my_num_labels = num_val_dirs
 
-    linear_classifier = LinearClassifier(embed_dim, num_labels=my_num_labels)
+    linear_classifier = LinearClassifier(embed_dim, num_labels=my_num_labels, dropout=args.dropout)
     linear_classifier = linear_classifier.cuda()
     linear_classifier = nn.parallel.DistributedDataParallel(linear_classifier, device_ids=[args.gpu])
 
@@ -250,17 +250,19 @@ def validate_network(val_loader, model, linear_classifier, n, avgpool):
 
 class LinearClassifier(nn.Module):
     """Linear layer to train on top of frozen features"""
-    def __init__(self, dim, num_labels):
+    def __init__(self, dim, num_labels, dropout=0):
         super(LinearClassifier, self).__init__()
         self.num_labels = num_labels
         self.linear = nn.Linear(dim, num_labels)
         self.linear.weight.data.normal_(mean=0.0, std=0.01)
         self.linear.bias.data.zero_()
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         # flatten
         x = x.view(x.size(0), -1)
-
+        # dropout
+        x = self.dropout(x)
         # linear layer
         return self.linear(x)
 
@@ -291,6 +293,7 @@ if __name__ == '__main__':
     parser.add_argument('--val_freq', default=1, type=int, help="Epoch frequency for validation.")
     parser.add_argument('--output_dir', default=".", help='Path to save logs and checkpoints')
     parser.add_argument('--num_labels', default=None, type=int, help='Number of labels for linear classifier')
+    parser.add_argument('--dropout', default=0, type=float, help='Dropout probability')
     parser.add_argument('--evaluate', dest='evaluate', action='store_true', help='evaluate model on validation set')
     args = parser.parse_args()
     eval_linear(args)
