@@ -64,7 +64,7 @@ def extract_feature_pipeline(args):
         print(f"Architecture {args.arch} non supported")
         sys.exit(1)
 
-    model.cuda()
+    if args.use_cuda: model.cuda()
     utils.load_pretrained_weights(model, args.pretrained_weights, args.checkpoint_key, args.arch, args.patch_size)
     model.eval()
 
@@ -84,8 +84,9 @@ def extract_features(model, data_loader, use_cuda=True, multiscale=False):
     metric_logger = utils.MetricLogger(delimiter="  ")
     features = None
     for samples, index in metric_logger.log_every(data_loader, 10):
-        samples = samples.cuda(non_blocking=True)
-        index = index.cuda(non_blocking=True)
+        if use_cuda:
+            samples = samples.cuda(non_blocking=True)
+            index = index.cuda(non_blocking=True)
         if multiscale:
             feats = utils.multi_scale(samples, model)
         else:
