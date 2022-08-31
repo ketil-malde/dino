@@ -158,11 +158,12 @@ if __name__ == '__main__':
     features, labels, files = extract_feature_pipeline(args)
     
     # save features and labels as CSV
+    feats = features.cpu()
     if args.output and dist.get_rank() == 0:
         with open(args.output, "w") as f:
             for i, (n, lab) in enumerate(files):
                 f.write(f'{i}\t{n}\t{str(lab)}\t{int(labels.cpu()[i])}\t[')
-                for j in features.cpu()[i]:
+                for j in feats[i]:
                     f.write(str(float(j)))
                     f.write(',')
                 f.write(']\n')
