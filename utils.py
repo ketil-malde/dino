@@ -69,6 +69,12 @@ class Solarization(object):
 
 
 def load_pretrained_weights(model, pretrained_weights, checkpoint_key, model_name, patch_size):
+    """
+    Load pretrained weights (stored as a dictionary in a pth file) into model.
+    The checkpoint_key is 'teacher' or 'student',
+    model_name is the network architecture (e.g., 'vit_small')
+    patch size is the (ViT) patch size.
+    """
     if os.path.isfile(pretrained_weights):
         state_dict = torch.load(pretrained_weights, map_location="cpu")
         if checkpoint_key is not None and checkpoint_key in state_dict:
@@ -469,32 +475,40 @@ def setup_for_distributed(is_master):
 def init_distributed_mode(args):
     # launched with torch.distributed.launch
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
+        args.backend = 'nccl'
         args.rank = int(os.environ["RANK"])
         args.world_size = int(os.environ['WORLD_SIZE'])
         args.gpu = int(os.environ['LOCAL_RANK'])
     # launched with submitit on a slurm cluster
     elif 'SLURM_PROCID' in os.environ:
+        args.backend = 'nccl'
         args.rank = int(os.environ['SLURM_PROCID'])
         args.gpu = args.rank % torch.cuda.device_count()
     # launched naively with `python main_dino.py`
     # we manually add MASTER_ADDR and MASTER_PORT to env variables
     elif torch.cuda.is_available():
         print('Will run the code on one GPU.')
+        args.backend = 'nccl'
         args.rank, args.gpu, args.world_size = 0, 0, 1
         os.environ['MASTER_ADDR'] = '127.0.0.1'
         os.environ['MASTER_PORT'] = '29500'
     else:
         print('Does not support training without GPU.')
-        sys.exit(1)
+        args.backend = 'gloo'
+        args.rank, args.gpu, args.world_size = 0, 0, 1
+        os.environ['MASTER_ADDR'] = '127.0.0.1'
+        os.environ['MASTER_PORT'] = '29500'
+        # sys.exit(1)
 
     dist.init_process_group(
-        backend="nccl",
+        backend=args.backend,
         init_method=args.dist_url,
         world_size=args.world_size,
         rank=args.rank,
     )
 
-    torch.cuda.set_device(args.gpu)
+    if(args.gpu):
+        torch.cuda.set_device(args.gpu)
     print('| distributed init (rank {}): {}'.format(
         args.rank, args.dist_url), flush=True)
 
