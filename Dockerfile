@@ -3,7 +3,9 @@
 # Start FROM Nvidia PyTorch image https://ngc.nvidia.com/catalog/containers/nvidia:pytorch
 # FROM nvcr.io/nvidia/pytorch:21.05-py3
 # ^ fails on nvidia-driver 460, but 20.12 works
-FROM nvcr.io/nvidia/pytorch:20.12-py3
+# FROM nvcr.io/nvidia/pytorch:20.12-py3
+# ^ got an error with 'interpolate' in tv.transforms.RandomRotate???
+FROM nvcr.io/nvidia/pytorch:23.05-py3
 
 # Install linux packages
 RUN apt update && apt install -y libgl1
